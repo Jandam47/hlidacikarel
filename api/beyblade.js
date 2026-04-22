@@ -1,28 +1,36 @@
 export default async function handler(req, res) {
-    try {
-        const response = await fetch(
-            "https://www.odkarla.cz/vyhledavani?q=beyblade",
-            {
-                headers: {
-                    "User-Agent": "Mozilla/5.0",
-                    "Accept": "application/json"
-                }
-            }
-        );
+  try {
+    const url =
+      "https://live.luigisbox.tech/search" +
+      "?q=beyblade" +
+      "&size=20" +
+      "&offset=0";
 
-        const data = await response.json();
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json"
+      }
+    });
 
-        const items = data?.products || [];
+    const data = await response.json();
 
-        const result = items.map(p => ({
-            name: p.name,
-            price: p.price + " Kč",
-            link: "https://www.odkarla.cz" + p.url
-        }));
+    const hits = data?.results?.hits || [];
 
-        res.status(200).json(result);
+    const result = hits.map(p => ({
+      name: p.attributes?.title || "bez názvu",
+      price: p.attributes?.price_amount
+        ? p.attributes.price_amount + " Kč"
+        : "-",
+      link: p.url
+        ? "https://www.odkarla.cz" + p.url
+        : "#"
+    }));
 
-    } catch (e) {
-        res.status(500).json({ error: e.toString() });
-    }
+    res.status(200).json(result);
+
+  } catch (e) {
+    res.status(500).json({ error: e.toString() });
+  }
 }
+``

@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
     try {
         const response = await fetch(
-            "https://www.odkarla.cz/api/search?q=beyblade",
+            "https://www.odkarla.cz/vyhledavani?q=beyblade",
             {
                 headers: {
                     "User-Agent": "Mozilla/5.0",

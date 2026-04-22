@@ -1,1 +1,53 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Hlídač Karel</title>
 
+<style>
+body{font-family:Arial;background:#111;color:#fff;padding:20px;}
+table{width:100%;border-collapse:collapse;}
+td,th{border:1px solid #444;padding:8px;}
+th{background:#222;}
+button{padding:10px;margin-bottom:15px;}
+</style>
+</head>
+
+<body>
+
+<h1>Beyblade – odkarla.cz</h1>
+
+<button onclick="load()">Načíst</button>
+
+<table>
+<thead>
+<tr>
+<th>Název</th>
+<th>Cena</th>
+<th>Odkaz</th>
+</tr>
+</thead>
+<tbody id="out"></tbody>
+</table>
+
+<script>
+async function load(){
+    const res = await fetch("/api/beyblade");
+    const data = await res.json();
+
+    const out = document.getElementById("out");
+    out.innerHTML = "";
+
+    data.forEach(i=>{
+        out.innerHTML += `
+        <tr>
+            <td>${i.name}</td>
+            <td>${i.price}</td>
+            <td><a href="${i.link}" target="_blank">Otevřít</a></td>
+        </tr>`;
+    });
+}
+</script>
+
+</body>
+</html>

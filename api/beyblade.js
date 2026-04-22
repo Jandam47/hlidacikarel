@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    const url = "https://odkarla.cz/hledani?term=beyblade";
+    const url = "https://www.odkarla.cz/vyhledavani?q=beyblade";
 
     try {
         const response = await fetch(url, {

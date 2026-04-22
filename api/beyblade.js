@@ -1,41 +1,26 @@
-import { chromium } from "playwright-core";
-
 export default async function handler(req, res) {
-    const url = "https://www.odkarla.cz/vyhledavani?q=beyblade";
-
     try {
-        const browser = await chromium.launch({
-            args: ["--no-sandbox"],
-        });
-
-        const page = await browser.newPage();
-        await page.goto(url, { waitUntil: "networkidle" });
-
-        // počkej na produkty (můžeš doladit selector)
-        await page.waitForTimeout(3000);
-
-        const data = await page.evaluate(() => {
-            const items = [];
-
-            document.querySelectorAll("a").forEach(el => {
-                const text = el.innerText;
-                const priceMatch = text.match(/\d+\s*Kč/);
-
-                if (text.toLowerCase().includes("beyblade") && priceMatch) {
-                    items.push({
-                        name: text.trim(),
-                        price: priceMatch[0],
-                        link: el.href
-                    });
+        const response = await fetch(
+            "https://www.odkarla.cz/api/search?q=beyblade",
+            {
+                headers: {
+                    "User-Agent": "Mozilla/5.0",
+                    "Accept": "application/json"
                 }
-            });
+            }
+        );
 
-            return items.slice(0, 30);
-        });
+        const data = await response.json();
 
-        await browser.close();
+        const items = data?.products || [];
 
-        res.status(200).json(data);
+        const result = items.map(p => ({
+            name: p.name,
+            price: p.price + " Kč",
+            link: "https://www.odkarla.cz" + p.url
+        }));
+
+        res.status(200).json(result);
 
     } catch (e) {
         res.status(500).json({ error: e.toString() });

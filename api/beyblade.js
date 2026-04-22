@@ -1,35 +1,46 @@
-export default async function handler(req, res) {
-  try {
-    const url =
-      "https://live.luigisbox.tech/search" +
-      "?q=beyblade" +
-      "&size=20" +
-      "&offset=0" +
-      "&tracker_id=odkarla";
+import { chromium } from "playwright-core";
 
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json"
+export default async function handler(req, res) {
+  let browser;
+
+  try {
+    browser = await chromium.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    });
+
+    const page = await browser.newPage();
+
+    let resultJson = null;
+
+    // zachytíme LuigiBox search response
+    page.on("response", async response => {
+      const url = response.url();
+      if (
+        url.includes("luigisbox") &&
+        url.includes("search")
+      ) {
+        try {
+          const json = await response.json();
+          resultJson = json;
+        } catch {}
       }
     });
 
-    const contentType = response.headers.get("content-type");
-    const raw = await response.text();
+    await page.goto(
+      "https://www.odkarla.cz/vyhledavani?q=beyblade",
+      { waitUntil: "networkidle" }
+    );
 
-    // ⛑️ ochrana proti HTML odpovědi
-    if (!contentType || !contentType.includes("application/json")) {
-      return res.status(502).json({
-        error: "LuigisBox nevrátil JSON",
-        preview: raw.slice(0, 150)
-      });
+    // malá rezerva
+    await page.waitForTimeout(2000);
+
+    if (!resultJson) {
+      throw new Error("LuigiBox JSON nebyl zachycen");
     }
 
-    const data = JSON.parse(raw);
+    const hits = resultJson?.results?.hits || [];
 
-    const hits = data?.results?.hits || [];
-
-    const result = hits.map(p => ({
+    const data = hits.map(p => ({
       name: p.attributes?.title || "bez názvu",
       price: p.attributes?.price_amount
         ? p.attributes.price_amount + " Kč"
@@ -39,10 +50,11 @@ export default async function handler(req, res) {
         : "#"
     }));
 
-    res.status(200).json(result);
+    res.status(200).json(data);
 
   } catch (e) {
     res.status(500).json({ error: e.message });
+  } finally {
+    if (browser) await browser.close();
   }
 }
-``

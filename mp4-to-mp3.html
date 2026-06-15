@@ -3,21 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>MP4→MP3 // CONVERTER</title>
-<script>
-/*! coi-serviceworker v0.1.7 - Guido Zuidhof, MIT */
-let coepCredentialless=!1;"undefined"==typeof window?(self.addEventListener("install",(()=>self.skipWaiting())),self.addEventListener("activate",(e=>e.waitUntil(self.clients.claim()))),self.addEventListener("message",(e=>{e.data&&("deregister"===e.data.type?self.registration.unregister().then((()=>self.clients.matchAll())).then((e=>{e.forEach((e=>e.navigate(e.url)))})):"coepCredentialless"===e.data.type&&(coepCredentialless=e.data.value))})),self.addEventListener("fetch",(function(e){const o=e.request;if("only-if-cached"===o.cache&&"same-origin"!==o.mode)return;const s=coepCredentialless&&"no-cors"===o.mode?new Request(o,{credentials:"omit"}):o;e.respondWith(fetch(s).then((e=>{if(0===e.status)return e;const o=new Headers(e.headers);return o.set("Cross-Origin-Embedder-Policy",coepCredentialless?"credentialless":"require-corp"),coepCredentialless||o.set("Cross-Origin-Resource-Policy","cross-origin"),o.set("Cross-Origin-Opener-Policy","same-origin"),new Response(e.body,{status:e.status,statusText:e.statusText,headers:o})})).catch((e=>console.error(e))))}))):(()=>{const e=window.sessionStorage.getItem("coiReloadedBySelf");window.sessionStorage.removeItem("coiReloadedBySelf");const o="coepdegrade"==e,s={shouldRegister:()=>!e,shouldDeregister:()=>!1,coepCredentialless:()=>!0,coepDegrade:()=>!0,doReload:()=>window.location.reload(),quiet:!1,...window.coi},r=navigator,t=r.serviceWorker&&r.serviceWorker.controller;t&&!window.crossOriginIsolated&&window.sessionStorage.setItem("coiCoepHasFailed","true");const i=window.sessionStorage.getItem("coiCoepHasFailed");if(t){const e=s.coepDegrade()&&!(o||window.crossOriginIsolated);r.serviceWorker.controller.postMessage({type:"coepCredentialless",value:!(e||i&&s.coepDegrade())&&s.coepCredentialless()}),e&&(!s.quiet&&console.log("Reloading page to degrade COEP."),window.sessionStorage.setItem("coiReloadedBySelf","coepdegrade"),s.doReload("coepdegrade")),s.shouldDeregister()&&r.serviceWorker.controller.postMessage({type:"deregister"})}!1===window.crossOriginIsolated&&s.shouldRegister()&&(window.isSecureContext?r.serviceWorker?r.serviceWorker.register(window.document.currentScript.src).then((e=>{!s.quiet&&console.log("COOP/COEP Service Worker registered",e.scope),e.addEventListener("updatefound",(()=>{!s.quiet&&console.log("Reloading page to make use of updated COOP/COEP Service Worker."),window.sessionStorage.setItem("coiReloadedBySelf","updatefound"),s.doReload()})),e.active&&!r.serviceWorker.controller&&(!s.quiet&&console.log("Reloading page to make use of COOP/COEP Service Worker."),window.sessionStorage.setItem("coiReloadedBySelf","notcontrolling"),s.doReload())}),(e=>{!s.quiet&&console.error("COOP/COEP Service Worker failed to register:",e)})):!s.quiet&&console.error("COOP/COEP Service Worker not registered, perhaps due to private mode."):!s.quiet&&console.log("COOP/COEP Service Worker not registered, a secure context is required."))})();
-</script>
-<script>
-// Pokud SW je registrovaný ale ještě nepřevzal kontrolu → force reload
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.ready.then(reg => {
-    if (!window.crossOriginIsolated) {
-      console.log('[COI] SW ready ale crossOriginIsolated=false, reloaduji...');
-      window.location.reload();
-    }
-  });
-}
-</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Rajdhani',sans-serif}
@@ -29,9 +14,6 @@ box-shadow:0 0 25px #ff00aa,0 0 60px rgba(0,255,255,.2) inset}
 h1{font-family:'Orbitron',sans-serif;font-size:24px;text-align:center;color:#0ff;
 text-shadow:0 0 10px #0ff,0 0 20px #ff00aa;margin-bottom:5px;letter-spacing:2px}
 .sub{text-align:center;color:#ff00aa;font-size:12px;letter-spacing:3px;margin-bottom:25px}
-.isolation{text-align:center;font-size:11px;margin-bottom:15px;padding:6px;border-radius:4px}
-.isolated{color:#0f0;border:1px solid #0f0;background:rgba(0,255,0,.05)}
-.not-isolated{color:#ff0;border:1px solid #ff0;background:rgba(255,255,0,.05)}
 .drop{border:2px dashed #0ff;border-radius:8px;padding:40px 20px;text-align:center;cursor:pointer;
 transition:.3s;margin-bottom:20px}
 .drop:hover,.drop.drag{background:rgba(0,255,255,.08);box-shadow:0 0 20px #0ff inset}
@@ -45,7 +27,7 @@ button:disabled{opacity:.3;cursor:not-allowed}
 button:hover:not(:disabled){transform:scale(1.02);box-shadow:0 0 20px #0ff}
 #status{text-align:center;margin-top:15px;font-size:13px;color:#0ff;min-height:40px;word-break:break-all}
 #progress{width:100%;height:8px;background:#1a0030;border-radius:4px;overflow:hidden;margin-top:10px;display:none}
-#bar{height:100%;width:0%;background:linear-gradient(90deg,#ff00aa,#0ff);transition:width .2s}
+#bar{height:100%;width:0%;background:linear-gradient(90deg,#ff00aa,#0ff);transition:width .3s}
 #dl{display:none;text-align:center;margin-top:15px;color:#0ff;font-weight:700;text-decoration:none;
 border:1px solid #0ff;padding:10px;border-radius:6px}
 #dl:hover{background:rgba(0,255,255,.1)}
@@ -55,7 +37,6 @@ border:1px solid #0ff;padding:10px;border-radius:6px}
 <div class="box">
   <h1>VIDEO // AUDIO EXTRACTOR</h1>
   <div class="sub">MP4 ➜ MP3 :: LOCAL ONLY :: NO UPLOAD</div>
-  <div class="isolation" id="isoStatus"></div>
 
   <div class="drop" id="drop">
     <p>📁 Klikni nebo přetáhni MP4 sem</p>
@@ -69,19 +50,15 @@ border:1px solid #0ff;padding:10px;border-radius:6px}
   <a id="dl">⬇ STÁHNOUT MP3</a>
 </div>
 
-<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+<script src="https://unpkg.com/lamejs@1.2.1/lame.min.js"></script>
 <script>
-// Debug info – zobrazí stav izolace
-const isoEl = document.getElementById('isoStatus');
-const isolated = window.crossOriginIsolated;
-isoEl.textContent = isolated
-  ? '✅ crossOriginIsolated = true — ffmpeg připraven'
-  : '⚠ crossOriginIsolated = false — čekám na Service Worker...';
-isoEl.className = 'isolation ' + (isolated ? 'isolated' : 'not-isolated');
-
-const drop=document.getElementById('drop'), fileInput=document.getElementById('file');
-const go=document.getElementById('go'), status=document.getElementById('status');
-const bar=document.getElementById('bar'), prog=document.getElementById('progress'), dl=document.getElementById('dl');
+const drop=document.getElementById('drop');
+const fileInput=document.getElementById('file');
+const go=document.getElementById('go');
+const status=document.getElementById('status');
+const bar=document.getElementById('bar');
+const prog=document.getElementById('progress');
+const dl=document.getElementById('dl');
 let file=null;
 
 drop.onclick=()=>fileInput.click();
@@ -97,44 +74,85 @@ function setFile(f){
   go.disabled=false;
   dl.style.display='none';
   status.textContent='';
+  status.style.color='#0ff';
 }
 
-const { createFFmpeg, fetchFile } = FFmpeg;
-const ffmpeg = createFFmpeg({
-  log: true,
-  corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
-  progress: ({ ratio }) => {
-    if (ratio >= 0 && ratio <= 1) bar.style.width = (ratio*100)+'%';
-  }
-});
+function setStatus(msg, color='#0ff'){
+  status.style.color=color;
+  status.textContent=msg;
+}
 
 go.onclick=async()=>{
   go.disabled=true;
   prog.style.display='block';
-  bar.style.width='0%';
-  status.style.color='#0ff';
+  bar.style.width='5%';
+  dl.style.display='none';
 
-  try{
-    status.textContent='⚙ Načítám FFmpeg jádro (může trvat 10–30s)...';
-    if(!ffmpeg.isLoaded()) await ffmpeg.load();
+  try {
+    setStatus('📖 Čtu soubor...');
+    const arrayBuffer = await file.arrayBuffer();
+    bar.style.width='20%';
 
-    status.textContent='🎧 Konvertuji...';
-    ffmpeg.FS('writeFile','input.mp4', await fetchFile(file));
-    await ffmpeg.run('-i','input.mp4','-vn','-b:a','192k','output.mp3');
+    setStatus('🔊 Dekoduji audio...');
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    bar.style.width='50%';
 
-    const data = ffmpeg.FS('readFile','output.mp3');
-    const blob = new Blob([data.buffer],{type:'audio/mp3'});
+    setStatus('🎛 Encoduji do MP3...');
+
+    const channels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const left = audioBuffer.getChannelData(0);
+    const right = channels > 1 ? audioBuffer.getChannelData(1) : left;
+
+    // lame MP3 encoder 128kbps
+    const mp3enc = new lamejs.Mp3Encoder(channels > 1 ? 2 : 1, sampleRate, 128);
+    const mp3Data = [];
+    const blockSize = 1152;
+    const total = left.length;
+
+    // Convert float32 → int16
+    function f32toI16(buf){
+      const out = new Int16Array(buf.length);
+      for(let i=0;i<buf.length;i++){
+        let s = Math.max(-1, Math.min(1, buf[i]));
+        out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      }
+      return out;
+    }
+
+    for(let i=0; i<total; i+=blockSize){
+      const lChunk = f32toI16(left.subarray(i, i+blockSize));
+      const rChunk = f32toI16(right.subarray(i, i+blockSize));
+      const encoded = channels > 1
+        ? mp3enc.encodeBuffer(lChunk, rChunk)
+        : mp3enc.encodeBuffer(lChunk);
+      if(encoded.length > 0) mp3Data.push(encoded);
+
+      // Update progress
+      if(i % (blockSize*50) === 0){
+        bar.style.width = (50 + Math.round((i/total)*45)) + '%';
+        // Yield to browser so UI updates
+        await new Promise(r=>setTimeout(r,0));
+      }
+    }
+
+    const end = mp3enc.flush();
+    if(end.length > 0) mp3Data.push(end);
+    bar.style.width='100%';
+
+    const blob = new Blob(mp3Data, {type:'audio/mp3'});
     const url = URL.createObjectURL(blob);
+    const outName = file.name.replace(/\.[^.]+$/, '') + '.mp3';
 
     dl.href=url;
-    dl.download=file.name.replace(/\.[^.]+$/,'')+'.mp3';
+    dl.download=outName;
     dl.style.display='block';
-    dl.textContent='⬇ STÁHNOUT: '+dl.download;
-    status.textContent='✅ Hotovo!';
+    dl.textContent='⬇ STÁHNOUT: '+outName;
+    setStatus('✅ Hotovo! Velikost: '+(blob.size/1024/1024).toFixed(2)+' MB');
 
-  }catch(err){
-    status.style.color='#ff00aa';
-    status.textContent='❌ '+err.message;
+  } catch(err) {
+    setStatus('❌ Chyba: '+err.message, '#ff00aa');
     console.error(err);
   }
 

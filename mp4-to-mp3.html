@@ -9,23 +9,44 @@
 body{background:#0a0014;color:#0ff;min-height:100vh;display:flex;align-items:center;justify-content:center;
 background-image:linear-gradient(rgba(255,0,170,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,255,.05) 1px,transparent 1px);
 background-size:30px 30px}
-.box{width:480px;background:#10031f;border:2px solid #ff00aa;border-radius:10px;padding:30px;
+.box{width:500px;background:#10031f;border:2px solid #ff00aa;border-radius:10px;padding:30px;
 box-shadow:0 0 25px #ff00aa,0 0 60px rgba(0,255,255,.2) inset}
 h1{font-family:'Orbitron',sans-serif;font-size:24px;text-align:center;color:#0ff;
 text-shadow:0 0 10px #0ff,0 0 20px #ff00aa;margin-bottom:5px;letter-spacing:2px}
 .sub{text-align:center;color:#ff00aa;font-size:12px;letter-spacing:3px;margin-bottom:25px}
-.drop{border:2px dashed #0ff;border-radius:8px;padding:40px 20px;text-align:center;cursor:pointer;
-transition:.3s;margin-bottom:20px}
+.drop{border:2px dashed #0ff;border-radius:8px;padding:35px 20px;text-align:center;cursor:pointer;
+transition:.3s;margin-bottom:16px}
 .drop:hover,.drop.drag{background:rgba(0,255,255,.08);box-shadow:0 0 20px #0ff inset}
 .drop p{color:#0ff;font-size:14px}
 input[type=file]{display:none}
-#fname{color:#ff00aa;font-size:13px;margin-top:10px;word-break:break-all}
-button{width:100%;padding:14px;background:linear-gradient(90deg,#ff00aa,#0ff);border:none;
+#fname{color:#ff00aa;font-size:13px;margin-top:8px;word-break:break-all}
+
+/* audio info strip */
+#audioInfo{display:none;background:#0a001e;border:1px solid #333;border-radius:6px;
+padding:10px 14px;margin-bottom:16px;font-size:12px;color:#aaa;line-height:1.8}
+#audioInfo span{color:#0ff}
+#audioInfo .badge{display:inline-block;background:#ff00aa;color:#000;font-weight:700;
+padding:1px 7px;border-radius:3px;font-size:11px;margin-left:6px}
+
+/* bitrate selector */
+.br-label{color:#aaa;font-size:12px;letter-spacing:2px;margin-bottom:8px}
+.br-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+.br-btn{padding:10px 4px;background:#1a0030;border:1px solid #333;border-radius:6px;
+color:#aaa;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+text-align:center;transition:.2s;position:relative}
+.br-btn:hover{border-color:#0ff;color:#0ff}
+.br-btn.active{border-color:#0ff;color:#0ff;background:rgba(0,255,255,.1);
+box-shadow:0 0 10px rgba(0,255,255,.3)}
+.br-btn.recommended::after{content:'AUTO';position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+background:#ff00aa;color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap}
+.br-btn .kbps{font-size:11px;color:inherit;opacity:.7}
+
+button#go{width:100%;padding:14px;background:linear-gradient(90deg,#ff00aa,#0ff);border:none;
 border-radius:8px;color:#10031f;font-family:'Orbitron',sans-serif;font-weight:700;font-size:16px;
 cursor:pointer;letter-spacing:2px;transition:.2s}
-button:disabled{opacity:.3;cursor:not-allowed}
-button:hover:not(:disabled){transform:scale(1.02);box-shadow:0 0 20px #0ff}
-#status{text-align:center;margin-top:15px;font-size:13px;color:#0ff;min-height:40px;word-break:break-all}
+button#go:disabled{opacity:.3;cursor:not-allowed}
+button#go:hover:not(:disabled){transform:scale(1.02);box-shadow:0 0 20px #0ff}
+#status{text-align:center;margin-top:15px;font-size:13px;color:#0ff;min-height:36px;word-break:break-all}
 #progress{width:100%;height:8px;background:#1a0030;border-radius:4px;overflow:hidden;margin-top:10px;display:none}
 #bar{height:100%;width:0%;background:linear-gradient(90deg,#ff00aa,#0ff);transition:width .3s}
 #dl{display:none;text-align:center;margin-top:15px;color:#0ff;font-weight:700;text-decoration:none;
@@ -44,6 +65,17 @@ border:1px solid #0ff;padding:10px;border-radius:6px}
   </div>
   <input type="file" id="file" accept="video/mp4,video/*">
 
+  <div id="audioInfo"></div>
+
+  <div class="br-label">// BITRATE</div>
+  <div class="br-grid" id="brGrid">
+    <div class="br-btn" data-br="64">64<div class="kbps">kbps</div></div>
+    <div class="br-btn" data-br="96">96<div class="kbps">kbps</div></div>
+    <div class="br-btn" data-br="128">128<div class="kbps">kbps</div></div>
+    <div class="br-btn" data-br="192">192<div class="kbps">kbps</div></div>
+    <div class="br-btn" data-br="320">320<div class="kbps">kbps</div></div>
+  </div>
+
   <button id="go" disabled>KONVERTOVAT</button>
   <div id="progress"><div id="bar"></div></div>
   <div id="status"></div>
@@ -59,7 +91,46 @@ const status=document.getElementById('status');
 const bar=document.getElementById('bar');
 const prog=document.getElementById('progress');
 const dl=document.getElementById('dl');
+const audioInfo=document.getElementById('audioInfo');
 let file=null;
+let selectedBr=192; // default
+
+// Bitrate selector
+document.getElementById('brGrid').addEventListener('click', e=>{
+  const btn = e.target.closest('.br-btn');
+  if(!btn) return;
+  document.querySelectorAll('.br-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedBr = parseInt(btn.dataset.br);
+});
+
+// Pick default active
+function setDefaultBr(recommended){
+  document.querySelectorAll('.br-btn').forEach(b=>{
+    b.classList.remove('active','recommended');
+    if(parseInt(b.dataset.br)===recommended){
+      b.classList.add('active','recommended');
+      selectedBr=recommended;
+    }
+  });
+}
+setDefaultBr(192);
+
+// Estimate best bitrate from file size + duration
+function estimateBitrate(fileSizeBytes, durationSec){
+  // total bitrate in kbps (includes video)
+  const totalKbps = (fileSizeBytes * 8) / durationSec / 1000;
+  // audio is usually 10-20% of total; cap at 320
+  // but we just snap to nearest tier that makes sense
+  const tiers = [64,96,128,192,320];
+  // if source audio sampleRate >= 44100 and file is high quality → 320
+  // conservative: snap based on total bitrate
+  if(totalKbps > 3000) return 320;
+  if(totalKbps > 1500) return 192;
+  if(totalKbps > 800)  return 128;
+  if(totalKbps > 400)  return 96;
+  return 64;
+}
 
 drop.onclick=()=>fileInput.click();
 drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag')};
@@ -67,7 +138,7 @@ drop.ondragleave=()=>drop.classList.remove('drag');
 drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');setFile(e.dataTransfer.files[0])};
 fileInput.onchange=e=>setFile(e.target.files[0]);
 
-function setFile(f){
+async function setFile(f){
   if(!f) return;
   file=f;
   document.getElementById('fname').textContent=f.name;
@@ -75,11 +146,45 @@ function setFile(f){
   dl.style.display='none';
   status.textContent='';
   status.style.color='#0ff';
+
+  // Quick decode just to get duration + sampleRate for the info strip
+  audioInfo.style.display='none';
+  try{
+    const ab = await f.arrayBuffer();
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const buf = await ctx.decodeAudioData(ab);
+    ctx.close();
+
+    const dur = buf.duration;
+    const sr  = buf.sampleRate;
+    const ch  = buf.numberOfChannels;
+    const mins= Math.floor(dur/60);
+    const secs= Math.floor(dur%60).toString().padStart(2,'0');
+    const sizeMB = (f.size/1024/1024).toFixed(1);
+
+    const rec = estimateBitrate(f.size, dur);
+    setDefaultBr(rec);
+
+    audioInfo.style.display='block';
+    audioInfo.innerHTML=
+      `🎵 <span>${buf.numberOfChannels>1?'Stereo':'Mono'}</span> &nbsp;|&nbsp; `+
+      `<span>${sr/1000} kHz</span> &nbsp;|&nbsp; `+
+      `<span>${mins}:${secs}</span> &nbsp;|&nbsp; `+
+      `<span>${sizeMB} MB</span>`+
+      `<br>🤖 Doporučený bitrate: <span>${rec} kbps</span><span class="badge">AUTO</span>`;
+  }catch(e){
+    // If preview decode fails just skip info
+    audioInfo.style.display='none';
+  }
 }
 
-function setStatus(msg, color='#0ff'){
-  status.style.color=color;
-  status.textContent=msg;
+function f32toI16(buf){
+  const out=new Int16Array(buf.length);
+  for(let i=0;i<buf.length;i++){
+    let s=Math.max(-1,Math.min(1,buf[i]));
+    out[i]=s<0?s*0x8000:s*0x7FFF;
+  }
+  return out;
 }
 
 go.onclick=async()=>{
@@ -87,72 +192,58 @@ go.onclick=async()=>{
   prog.style.display='block';
   bar.style.width='5%';
   dl.style.display='none';
+  status.style.color='#0ff';
 
-  try {
-    setStatus('📖 Čtu soubor...');
+  try{
+    status.textContent='📖 Čtu soubor...';
     const arrayBuffer = await file.arrayBuffer();
-    bar.style.width='20%';
+    bar.style.width='15%';
 
-    setStatus('🔊 Dekoduji audio...');
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    bar.style.width='50%';
+    status.textContent='🔊 Dekoduji audio...';
+    const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const audioBuffer=await audioCtx.decodeAudioData(arrayBuffer);
+    audioCtx.close();
+    bar.style.width='40%';
 
-    setStatus('🎛 Encoduji do MP3...');
+    const channels=audioBuffer.numberOfChannels;
+    const sampleRate=audioBuffer.sampleRate;
+    const left=audioBuffer.getChannelData(0);
+    const right=channels>1?audioBuffer.getChannelData(1):left;
 
-    const channels = audioBuffer.numberOfChannels;
-    const sampleRate = audioBuffer.sampleRate;
-    const left = audioBuffer.getChannelData(0);
-    const right = channels > 1 ? audioBuffer.getChannelData(1) : left;
+    status.textContent=`🎛 Encoduji MP3 @ ${selectedBr} kbps...`;
+    const mp3enc=new lamejs.Mp3Encoder(channels>1?2:1, sampleRate, selectedBr);
+    const mp3Data=[];
+    const blockSize=1152;
+    const total=left.length;
 
-    // lame MP3 encoder 128kbps
-    const mp3enc = new lamejs.Mp3Encoder(channels > 1 ? 2 : 1, sampleRate, 128);
-    const mp3Data = [];
-    const blockSize = 1152;
-    const total = left.length;
-
-    // Convert float32 → int16
-    function f32toI16(buf){
-      const out = new Int16Array(buf.length);
-      for(let i=0;i<buf.length;i++){
-        let s = Math.max(-1, Math.min(1, buf[i]));
-        out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-      }
-      return out;
-    }
-
-    for(let i=0; i<total; i+=blockSize){
-      const lChunk = f32toI16(left.subarray(i, i+blockSize));
-      const rChunk = f32toI16(right.subarray(i, i+blockSize));
-      const encoded = channels > 1
-        ? mp3enc.encodeBuffer(lChunk, rChunk)
-        : mp3enc.encodeBuffer(lChunk);
-      if(encoded.length > 0) mp3Data.push(encoded);
-
-      // Update progress
-      if(i % (blockSize*50) === 0){
-        bar.style.width = (50 + Math.round((i/total)*45)) + '%';
-        // Yield to browser so UI updates
+    for(let i=0;i<total;i+=blockSize){
+      const lChunk=f32toI16(left.subarray(i,i+blockSize));
+      const rChunk=f32toI16(right.subarray(i,i+blockSize));
+      const encoded=channels>1?mp3enc.encodeBuffer(lChunk,rChunk):mp3enc.encodeBuffer(lChunk);
+      if(encoded.length>0) mp3Data.push(encoded);
+      if(i%(blockSize*100)===0){
+        bar.style.width=(40+Math.round((i/total)*55))+'%';
         await new Promise(r=>setTimeout(r,0));
       }
     }
 
-    const end = mp3enc.flush();
-    if(end.length > 0) mp3Data.push(end);
+    const end=mp3enc.flush();
+    if(end.length>0) mp3Data.push(end);
     bar.style.width='100%';
 
-    const blob = new Blob(mp3Data, {type:'audio/mp3'});
-    const url = URL.createObjectURL(blob);
-    const outName = file.name.replace(/\.[^.]+$/, '') + '.mp3';
+    const blob=new Blob(mp3Data,{type:'audio/mp3'});
+    const url=URL.createObjectURL(blob);
+    const outName=file.name.replace(/\.[^.]+$/,'')+'.mp3';
 
     dl.href=url;
     dl.download=outName;
     dl.style.display='block';
     dl.textContent='⬇ STÁHNOUT: '+outName;
-    setStatus('✅ Hotovo! Velikost: '+(blob.size/1024/1024).toFixed(2)+' MB');
+    status.textContent=`✅ Hotovo! ${(blob.size/1024/1024).toFixed(2)} MB @ ${selectedBr} kbps`;
 
-  } catch(err) {
-    setStatus('❌ Chyba: '+err.message, '#ff00aa');
+  }catch(err){
+    status.style.color='#ff00aa';
+    status.textContent='❌ Chyba: '+err.message;
     console.error(err);
   }
 
